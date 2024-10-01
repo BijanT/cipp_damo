@@ -682,7 +682,7 @@ def set_damos_argparser(parser, hide_help):
             if not hide_help else argparse.SUPPRESS)
     parser.add_argument(
             '--damos_wmarks', nargs=5, action='append', default=[],
-            metavar=('<metric (none|free_mem_rate)>', '<interval (us)>',
+            metavar=('<metric (none|free_mem_rate|sysfs)>', '<interval (us)>',
                 '<high mark (permil)>', '<mid mark (permil)>',
                 '<low mark (permil)>'),
             help='damos watermarks'

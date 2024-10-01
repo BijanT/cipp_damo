@@ -28,6 +28,7 @@ def parse_argument():
         type=int,
         help="The PID of the process to track."
     )
+    parser.add_argument("-w", dest="wmark", action='store_true')
     parser.add_argument(
         "-o", "--output", dest="output", default=None, help="Set the output json file."
     )
@@ -66,9 +67,13 @@ def main():
     damos_access_rate = "--damos_access_rate 15% 100%"
     damos_age = "--damos_age 0 max"
     damos_quotas = "--damos_quotas 2s 50G 20s 0 0 1%"
+    if args.wmark:
+        damos_wmark = "--damos_wmarks sysfs 2s 100 95 90"
+    else:
+        damos_wmark = ""
     cmd = (
         f"{damo} args damon --format json {common_opts} {damos_action} "
-        f"{ops} {pid} {damos_access_rate} {damos_age} {damos_quotas}"
+        f"{ops} {pid} {damos_access_rate} {damos_age} {damos_quotas} {damos_wmark}"
     )
     json_str = run_command(cmd)
     node_json = json.loads(json_str)
