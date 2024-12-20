@@ -28,6 +28,12 @@ def parse_argument():
         type=int,
         help="The PID of the process to track."
     )
+    parser.add_argument(
+        "-v",
+        "--virt",
+        dest="virt",
+        action="store_true"
+    )
     parser.add_argument("-w", dest="wmark", action='store_true')
     parser.add_argument(
         "-o", "--output", dest="output", default=None, help="Set the output json file."
@@ -61,9 +67,14 @@ def main():
     common_damos_opts = f"{damos_sz_region}"
 
     damos_action = "--damos_action interleave"
-    ops = "--ops vaddr"
+    if args.virt:
+        ops = "--ops vaddr"
+    else:
+        ops = "--ops paddr"
     if args.pid is not None:
         pid = f"--target_pid {args.pid}"
+    else:
+        pid = ""
     damos_access_rate = "--damos_access_rate 15% 100%"
     damos_age = "--damos_age 0 max"
     damos_quotas = "--damos_quotas 2s 50G 20s 0 0 1%"
