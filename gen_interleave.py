@@ -10,7 +10,7 @@ import sys
 import yaml
 
 # Common options
-monitoring_intervals = "--monitoring_intervals 100ms 2s 8s"
+monitoring_intervals = "--monitoring_intervals 100ms 4s 4s"
 monitoring_nr_regions_range = "--monitoring_nr_regions_range 10 100000"
 
 # Common damos options
