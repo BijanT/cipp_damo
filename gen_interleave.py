@@ -10,12 +10,8 @@ import sys
 import yaml
 
 # Common options
-monitoring_intervals = "--monitoring_intervals 100ms 4s 4s"
-monitoring_nr_regions_range = "--monitoring_nr_regions_range 10 100000"
 
 # Common damos options
-# We want a range to be big enough to interleave, so have it be at least 200MB (100 huge pages)
-damos_sz_region = "--damos_sz_region 214748364800 max"
 damos_filter = "--damos_filter memcg nomatching /cipp"
 
 def parse_argument():
@@ -33,6 +29,13 @@ def parse_argument():
         "--virt",
         dest="virt",
         action="store_true"
+    )
+    parser.add_argument(
+        "-a",
+        "--addr",
+        dest="remote_start",
+        type=str,
+        help="The physical address of the start of the remote node"
     )
     parser.add_argument("-w", dest="wmark", action='store_true')
     parser.add_argument(
@@ -53,28 +56,8 @@ def run_command(cmd):
 def parent_dir_of_file(filename):
     return os.path.dirname(os.path.abspath(filename))
 
-def main():
-    args = parse_argument()
-
-    if os.geteuid() != 0:
-        print("error: Run as root")
-        sys.exit(1)
-
-    damo = parent_dir_of_file(__file__) + "/damo"
-    node_jsons = []
-
-    common_opts = f"{monitoring_intervals} {monitoring_nr_regions_range}"
-    common_damos_opts = f"{damos_sz_region}"
-
+def interleave_action(args):
     damos_action = "--damos_action interleave"
-    if args.virt:
-        ops = "--ops vaddr"
-    else:
-        ops = "--ops paddr"
-    if args.pid is not None:
-        pid = f"--target_pid {args.pid}"
-    else:
-        pid = ""
     damos_access_rate = "--damos_access_rate 15% 100%"
     damos_age = "--damos_age 0 max"
     damos_quotas = "--damos_quotas 2s 50G 10s 0 0 1%"
@@ -83,9 +66,41 @@ def main():
     else:
         damos_wmark = ""
     cmd = (
-        f"{damo} args damon --format json {common_opts} {damos_action} "
-        f"{ops} {pid} {damos_access_rate} {damos_age} {damos_quotas} {damos_wmark}"
+        f"{damos_action} {damos_access_rate} {damos_age} {damos_quotas} {damos_wmark} "
     )
+
+    return cmd
+
+def demote_action(args):
+    damos_action = "--damos_action migrate_cold 1"
+    damos_access_rate = "--damos_access_rate 0% 0%"
+    damos_age = "--damos_age 30s max"
+    damos_quotas = "--damos_quotas 2s 50G 20s 0 0 1%"
+    damos_young_filter = "--damos_filter young matching"
+    damos_addr_filter = f"--damos_filter addr nomatching 0 {args.remote_start}"
+    cmd = (
+        f"{damos_action} {damos_access_rate} {damos_age} {damos_quotas} "
+        f"{damos_young_filter} {damos_addr_filter} "
+    )
+
+    return cmd
+
+def main():
+    args = parse_argument()
+
+    if os.geteuid() != 0:
+        print("error: Run as root")
+        sys.exit(1)
+
+    damo = parent_dir_of_file(__file__) + "/damo"
+    monitoring_nr_regions_range = "--monitoring_nr_regions_range 10 100000"
+    monitoring_intervals = "--monitoring_intervals 100ms 4s 4s"
+    node_jsons = []
+
+    cmd = f"{damo} args damon --format json --numa_node 0 1 {monitoring_intervals} {monitoring_nr_regions_range} --ops paddr --damos_nr_filters 0 2 "
+    cmd += interleave_action(args)
+    cmd += demote_action(args)
+
     json_str = run_command(cmd)
     node_json = json.loads(json_str)
 
