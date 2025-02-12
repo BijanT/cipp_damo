@@ -49,11 +49,14 @@ def init_regions_for(args):
             init_regions.append(region)
 
     if args.ops == 'paddr' and not init_regions:
-        if args.numa_node != None:
-            init_regions, err = _damo_paddr_layout.paddr_region_of(
-                    args.numa_node)
-            if err != None:
-                return None, err
+        if len(args.numa_node) > 0:
+            init_regions = []
+            for node in args.numa_node:
+                node_regions, err = _damo_paddr_layout.paddr_region_of(
+                        node)
+                if err != None:
+                    return None, err
+                init_regions.extend(node_regions)
             init_regions = merge_cont_ranges(init_regions)
         else:
             init_regions = [_damo_paddr_layout.default_paddr_region()]
@@ -614,7 +617,7 @@ def set_monitoring_argparser(parser, hide_help=False):
                         help='monitoring target address regions'
                         if not hide_help else argparse.SUPPRESS)
     parser.add_argument(
-            '--numa_node', metavar='<node id>', type=int,
+            '--numa_node', metavar='<node id>', type=int, nargs='+', default=[],
             help='if target is \'paddr\', limit it to the numa node'
             if not hide_help else argparse.SUPPRESS)
     set_monitoring_attrs_argparser(parser, hide_help)
