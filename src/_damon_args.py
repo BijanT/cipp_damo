@@ -209,8 +209,15 @@ def damos_options_to_scheme(sz_region, access_rate, age, action,
     if wmarks != None:
         wargs = wmarks
         try:
-            wmarks = _damon.DamosWatermarks(wargs[0], wargs[1], wargs[2],
-                    wargs[3], wargs[4])
+            if len(wargs) == 5:
+                wmarks = _damon.DamosWatermarks(wargs[0], wargs[1], wargs[2],
+                        wargs[3], wargs[4])
+            elif len(wargs) == 6:
+                wmarks = _damon.DamosWatermarks(wargs[0], wargs[1], wargs[2],
+                        wargs[3], wargs[4], wargs[5])
+            else:
+                return None, 'Wrong number of --damos_wmarks arguments (%s)' % wargs
+
         except Exception as e:
             return None, 'Wrong --damos_wmarks (%s, %s)' % (wargs, e)
 
@@ -684,11 +691,11 @@ def set_damos_argparser(parser, hide_help):
             help='number of quota goals for each scheme (in order)'
             if not hide_help else argparse.SUPPRESS)
     parser.add_argument(
-            '--damos_wmarks', nargs=5, action='append', default=[],
-            metavar=('<metric (none|free_mem_rate|sysfs)>', '<interval (us)>',
+            '--damos_wmarks', nargs='+', action='append', default=[],
+            metavar='<metric and parameters>',
+            help=' '.join(['<metric (none|free_mem_rate|node_free_mem_rate|sysfs)>', '<interval (us)>',
                 '<high mark (permil)>', '<mid mark (permil)>',
-                '<low mark (permil)>'),
-            help='damos watermarks'
+                '<low mark (permil)>', '[nid]'])
             if not hide_help else argparse.SUPPRESS)
     parser.add_argument(
             '--damos_filter', nargs='+', action='append',

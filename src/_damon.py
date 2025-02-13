@@ -551,6 +551,7 @@ class DamosQuotas:
 
 damos_wmarks_metric_none = 'none'
 damos_wmarks_metric_free_mem_rate = 'free_mem_rate'
+damos_wmarks_metric_node_free_mem_rate = 'node_free_mem_rate'
 damos_wmarks_metric_sysfs = 'sysfs'
 
 class DamosWatermarks:
@@ -559,13 +560,15 @@ class DamosWatermarks:
     high_permil = None
     mid_permil = None
     low_permil = None
+    nid = None
 
     # no limit by default
     def __init__(self, metric=damos_wmarks_metric_none, interval_us=0,
-            high='0 %', mid='0 %', low='0 %'):
-        # 'none', 'free_mem_rate', 'sysfs'
+            high='0 %', mid='0 %', low='0 %', nid='-1'):
+        # 'none', 'free_mem_rate', 'node_free_mem_rate', 'sysfs'
         if not metric in [damos_wmarks_metric_none,
                 damos_wmarks_metric_free_mem_rate,
+                damos_wmarks_metric_node_free_mem_rate,
                 damos_wmarks_metric_sysfs]:
             raise Exception('wrong watermark metric (%s)' % metric)
         self.metric = metric
@@ -573,16 +576,26 @@ class DamosWatermarks:
         self.high_permil = _damo_fmt_str.text_to_permil(high)
         self.mid_permil = _damo_fmt_str.text_to_permil(mid)
         self.low_permil = _damo_fmt_str.text_to_permil(low)
+        self.nid = _damo_fmt_str.text_to_nr(nid)
+
+        if metric == damos_wmarks_metric_node_free_mem_rate and self.nid == -1:
+            raise Exception('metric %s requires a node id, but none given', metric)
+        elif metric != damos_wmarks_metric_node_free_mem_rate:
+            self.nid = 0
 
     def to_str(self, raw):
-        return '\n'.join([
+        lines = [
             'metric %s, interval %s' % (self.metric,
                 _damo_fmt_str.format_time_us(self.interval_us, raw)),
             '%s, %s, %s' % (
                 _damo_fmt_str.format_permil(self.high_permil, raw),
                 _damo_fmt_str.format_permil(self.mid_permil, raw),
                 _damo_fmt_str.format_permil(self.low_permil, raw)),
-            ])
+        ]
+
+        if self.metric == damos_wmarks_metric_node_free_mem_rate:
+            lines.append('node id %s' % (_damo_fmt_str.format_nr(self.nid, raw)))
+        return '\n'.join(lines)
 
     def __str__(self):
         return self.to_str(False)
@@ -592,13 +605,14 @@ class DamosWatermarks:
                 self.interval_us == other.interval_us and
                 self.high_permil == other.high_permil and
                 self.mid_permil == other.mid_permil and
-                self.low_permil == other.low_permil)
+                self.low_permil == other.low_permil and
+                self.nid == other.nid)
 
     @classmethod
     def from_kvpairs(cls, kv):
         return DamosWatermarks(*[kv[x] for x in
             ['metric', 'interval_us', 'high_permil', 'mid_permil',
-                'low_permil']])
+                'low_permil', 'nid']])
 
     def to_kvpairs(self, raw=False):
         return collections.OrderedDict([
@@ -611,6 +625,8 @@ class DamosWatermarks:
                     _damo_fmt_str.format_permil(self.mid_permil, raw)),
                 ('low_permil',
                     _damo_fmt_str.format_permil(self.low_permil, raw)),
+                ('nid',
+                    _damo_fmt_str.format_nr(self.nid, raw))
                 ])
 
 class DamosFilter:

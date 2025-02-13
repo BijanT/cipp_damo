@@ -175,8 +175,12 @@ def write_watermarks_dir(dir_path, wmarks):
             os.path.join(dir_path, 'mid'), '%d' % wmarks.mid_permil)
     if err is not None:
         return err
-    return _damo_fs.write_file(
+    err = _damo_fs.write_file(
             os.path.join(dir_path, 'low'), '%d' % wmarks.low_permil)
+    if err is not None:
+        return err
+    return _damo_fs.write_file(
+            os.path.join(dir_path, 'nid'), '%d' % wmarks.nid)
 
 def write_quota_goal_dir(dir_path, goal):
     # goal metric is wip as of 6.8-rc4 days.
@@ -529,7 +533,8 @@ def files_content_to_watermarks(files_content):
             int(files_content['interval_us']),
             int(files_content['high']),
             int(files_content['mid']),
-            int(files_content['low']))
+            int(files_content['low']),
+            int(files_content['nid']))
 
 def files_content_to_damos_filters(files_content):
     return [_damon.DamosFilter(filter_kv['type'].strip(),

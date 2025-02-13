@@ -61,10 +61,7 @@ def interleave_action(args):
     damos_access_rate = "--damos_access_rate 15% 100%"
     damos_age = "--damos_age 0 max"
     damos_quotas = "--damos_quotas 2s 50G 10s 0 0 1%"
-    if args.wmark:
-        damos_wmark = "--damos_wmarks sysfs 2s 100 95 90"
-    else:
-        damos_wmark = ""
+    damos_wmark = "--damos_wmarks none 0 0 0 0"
     cmd = (
         f"{damos_action} {damos_access_rate} {damos_age} {damos_quotas} {damos_wmark} "
     )
@@ -78,9 +75,10 @@ def demote_action(args):
     damos_quotas = "--damos_quotas 2s 50G 20s 0 0 1%"
     damos_young_filter = "--damos_filter young matching"
     damos_addr_filter = f"--damos_filter addr nomatching 0 {args.remote_start}"
+    damos_wmark = "--damos_wmarks node_free_mem_rate 4s 5% 3% 0% 0"
     cmd = (
         f"{damos_action} {damos_access_rate} {damos_age} {damos_quotas} "
-        f"{damos_young_filter} {damos_addr_filter} "
+        f"{damos_young_filter} {damos_addr_filter} {damos_wmark}"
     )
 
     return cmd
