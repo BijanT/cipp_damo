@@ -71,13 +71,12 @@ def interleave_action(args):
 def demote_action(args):
     damos_action = "--damos_action migrate_cold 1"
     damos_access_rate = "--damos_access_rate 0% 0%"
-    damos_age = "--damos_age 30s max"
-    damos_quotas = "--damos_quotas 2s 50G 20s 0 0 1%"
+    damos_age = "--damos_age 15s max"
     damos_young_filter = "--damos_filter young matching"
     damos_addr_filter = f"--damos_filter addr nomatching 0 {args.remote_start}"
     damos_wmark = "--damos_wmarks node_free_mem_rate 4s 5% 3% 0% 0"
     cmd = (
-        f"{damos_action} {damos_access_rate} {damos_age} {damos_quotas} "
+        f"{damos_action} {damos_access_rate} {damos_age} "
         f"{damos_young_filter} {damos_addr_filter} {damos_wmark}"
     )
 
@@ -91,7 +90,7 @@ def main():
         sys.exit(1)
 
     damo = parent_dir_of_file(__file__) + "/damo"
-    monitoring_nr_regions_range = "--monitoring_nr_regions_range 10 100000"
+    monitoring_nr_regions_range = "--monitoring_nr_regions_range 100 100000"
     monitoring_intervals = "--monitoring_intervals 100ms 4s 4s"
     node_jsons = []
 
