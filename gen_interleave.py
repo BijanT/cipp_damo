@@ -58,7 +58,7 @@ def parent_dir_of_file(filename):
 
 def interleave_action(args):
     damos_action = "--damos_action interleave"
-    damos_access_rate = "--damos_access_rate 15% 100%"
+    damos_access_rate = "--damos_access_rate 10% 100%"
     damos_age = "--damos_age 0 max"
     damos_quotas = "--damos_quotas 2s 50G 10s 0 0 1%"
     damos_wmark = "--damos_wmarks none 0 0 0 0"
@@ -72,11 +72,12 @@ def demote_action(args):
     damos_action = "--damos_action migrate_cold 1"
     damos_access_rate = "--damos_access_rate 0% 0%"
     damos_age = "--damos_age 15s max"
+    damos_quotas = "--damos_quotas 2s 5G 10s 0 0 0"
     damos_young_filter = "--damos_filter young matching"
     damos_addr_filter = f"--damos_filter addr nomatching 0 {args.remote_start}"
-    damos_wmark = "--damos_wmarks node_free_mem_rate 4s 5% 3% 0% 0"
+    damos_wmark = "--damos_wmarks node_free_mem_rate 3s 2% 1% 0% 0"
     cmd = (
-        f"{damos_action} {damos_access_rate} {damos_age} "
+        f"{damos_action} {damos_access_rate} {damos_age} {damos_quotas} "
         f"{damos_young_filter} {damos_addr_filter} {damos_wmark}"
     )
 
@@ -91,7 +92,7 @@ def main():
 
     damo = parent_dir_of_file(__file__) + "/damo"
     monitoring_nr_regions_range = "--monitoring_nr_regions_range 100 100000"
-    monitoring_intervals = "--monitoring_intervals 100ms 4s 4s"
+    monitoring_intervals = "--monitoring_intervals 100ms 3s 6s"
     node_jsons = []
 
     cmd = f"{damo} args damon --format json --numa_node 0 1 {monitoring_intervals} {monitoring_nr_regions_range} --ops paddr --damos_nr_filters 0 2 "
