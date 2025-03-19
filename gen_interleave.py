@@ -60,7 +60,7 @@ def interleave_action(args):
     damos_action = "--damos_action interleave"
     damos_access_rate = "--damos_access_rate 10% 100%"
     damos_age = "--damos_age 0 max"
-    damos_quotas = "--damos_quotas 2s 50G 10s 0 0 1%"
+    damos_quotas = "--damos_quotas 0s 0G 0s 0 0 0"
     damos_wmark = "--damos_wmarks none 0 0 0 0"
     cmd = (
         f"{damos_action} {damos_access_rate} {damos_age} {damos_quotas} {damos_wmark} "
@@ -91,8 +91,8 @@ def main():
         sys.exit(1)
 
     damo = parent_dir_of_file(__file__) + "/damo"
-    monitoring_nr_regions_range = "--monitoring_nr_regions_range 100 100000"
-    monitoring_intervals = "--monitoring_intervals 100ms 3s 6s"
+    monitoring_nr_regions_range = "--monitoring_nr_regions_range 2000 10000"
+    monitoring_intervals = "--monitoring_intervals 200ms 3s 6s"
     node_jsons = []
 
     cmd = f"{damo} args damon --format json --numa_node 0 1 {monitoring_intervals} {monitoring_nr_regions_range} --ops paddr --damos_nr_filters 0 2 "
